@@ -1,24 +1,38 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
 import {
-  Scale,
   Delete,
   XCircle,
   CheckCircle2,
   CreditCard,
   UserCheck,
+  Scale,
+  LogOut,
+  RotateCcw,
+  Send,
+  ShoppingBag,
+  ArrowRight,
+  Smartphone,
+  Radio,
+  AlertCircle,
+  Package,
+  Zap,
 } from "lucide-react";
 
 export default function KasirPage() {
   const [pin, setPin] = useState("");
   const [kg, setKg] = useState("");
-  const [mitra, setMitra] = useState<any>(null); // State baru untuk menyimpan profil mitra
+  const [mitra, setMitra] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [rfidReady, setRfidReady] = useState(true);
+  const [successAnim, setSuccessAnim] = useState(false);
+  const kgInputRef = useRef<HTMLInputElement>(null);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // ----------------------------------------------------------------------
-  // INVISIBLE RFID LISTENER: Menangkap tap kartu tanpa perlu input box
+  // VERIFIKASI MITRA
   // ----------------------------------------------------------------------
   const verifyMitra = useCallback(
     async (type: "rfid" | "pin", value: string) => {
@@ -29,15 +43,19 @@ export default function KasirPage() {
         setMitra(res.data.data);
         setMessage({
           type: "success",
-          text: `MITRA: ${res.data.data.nama_penjual}`,
+          text: `${res.data.data.nama_penjual} berhasil diverifikasi`,
         });
-        setPin(""); // Bersihkan PIN
+        setPin("");
+        setKg("");
+        setCurrentStep(2);
+        setTimeout(() => kgInputRef.current?.focus(), 150);
       } catch (err: any) {
         setMessage({
           type: "error",
-          text: err.response?.data?.error || "KARTU/PIN TIDAK DIKENALI",
+          text: err.response?.data?.error || "PIN/Kartu tidak dikenali",
         });
         setPin("");
+        shakePinBox();
       } finally {
         setLoading(false);
       }
@@ -45,12 +63,14 @@ export default function KasirPage() {
     [],
   );
 
+  // ----------------------------------------------------------------------
+  // RFID LISTENER
+  // ----------------------------------------------------------------------
   useEffect(() => {
     let rfidBuffer = "";
     let lastKeyTime = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Abaikan jika user kebetulan sedang fokus di elemen input lain
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
@@ -58,16 +78,14 @@ export default function KasirPage() {
         return;
 
       const currentTime = Date.now();
-      // Alat RFID mengetik sangat cepat (biasanya < 30ms per karakter)
-      if (currentTime - lastKeyTime > 100) {
-        rfidBuffer = ""; // Jika jeda terlalu lama, berarti itu ketikan manusia, reset buffer
-      }
+      if (currentTime - lastKeyTime > 100) rfidBuffer = "";
       lastKeyTime = currentTime;
 
       if (e.key === "Enter") {
         if (rfidBuffer.length > 4) {
-          // Jika panjang string > 4 dan sangat cepat, dipastikan itu RFID
+          setRfidReady(false);
           verifyMitra("rfid", rfidBuffer);
+          setTimeout(() => setRfidReady(true), 1500);
         }
         rfidBuffer = "";
       } else if (e.key.length === 1) {
@@ -80,27 +98,37 @@ export default function KasirPage() {
   }, [verifyMitra]);
 
   // ----------------------------------------------------------------------
-  // LOGIKA NUMPAD BERDASARKAN STATE
+  // ANIMASI SHAKE
+  // ----------------------------------------------------------------------
+  const pinBoxRef = useRef<HTMLDivElement>(null);
+  const shakePinBox = () => {
+    if (pinBoxRef.current) {
+      pinBoxRef.current.classList.add("animate-shake");
+      setTimeout(
+        () => pinBoxRef.current?.classList.remove("animate-shake"),
+        500,
+      );
+    }
+  };
+
+  // ----------------------------------------------------------------------
+  // NUMPAD HANDLER
   // ----------------------------------------------------------------------
   const handleNumpad = (val: string) => {
     if (!mitra) {
-      // JIKA MITRA BELUM ADA -> NUMPAD UNTUK PIN
       const newPin = pin + val;
       if (newPin.length <= 4) {
         setPin(newPin);
-        // Auto-verify jika sudah 4 digit
-        if (newPin.length === 4) {
-          verifyMitra("pin", newPin);
-        }
+        if (newPin.length === 4) verifyMitra("pin", newPin);
       }
     } else {
-      // JIKA MITRA SUDAH ADA -> NUMPAD UNTUK KG
       if (val === "." && kg.includes(".")) return;
       if (val === "." && kg === "") {
         setKg("0.");
         return;
       }
-      setKg((prev) => prev + val);
+      const newKg = kg + val;
+      if (newKg.replace(".", "").length <= 5) setKg(newKg);
     }
   };
 
@@ -114,6 +142,8 @@ export default function KasirPage() {
     setKg("");
     setMitra(null);
     setMessage({ type: "", text: "" });
+    setSuccessAnim(false);
+    setCurrentStep(1);
   };
 
   const handleLogout = () => {
@@ -125,20 +155,22 @@ export default function KasirPage() {
     window.location.href = "/login";
   };
 
+  // ----------------------------------------------------------------------
+  // SUBMIT TRANSAKSI
+  // ----------------------------------------------------------------------
   const handleSubmit = async () => {
     if (!mitra) {
-      setMessage({ type: "error", text: "VERIFIKASI MITRA DULU!" });
+      setMessage({ type: "error", text: "Verifikasi mitra terlebih dahulu!" });
       return;
     }
     if (!kg || parseFloat(kg) <= 0) {
-      setMessage({ type: "error", text: "BERAT HARUS DIISI!" });
+      setMessage({ type: "error", text: "Masukkan jumlah KG!" });
       return;
     }
 
     setLoading(true);
     try {
-      // Asumsi backend menggunakan penjual_id. Kita sertakan pin juga agar backward-compatible
-      const res = await api.post("/kasir/check-in", {
+      await api.post("/kasir/check-in", {
         penjual_id: mitra.id,
         pin: mitra.pin,
         jumlah_kg: parseFloat(kg),
@@ -146,191 +178,501 @@ export default function KasirPage() {
 
       setMessage({
         type: "success",
-        text: `TRANSAKSI SUKSES: ${mitra.nama_penjual} | ${kg} KG`,
+        text: `✅ Transaksi berhasil! ${mitra.nama_penjual} - ${kg} KG`,
       });
-      // Reset flow
-      setPin("");
-      setKg("");
-      setMitra(null);
+      setSuccessAnim(true);
+
+      setTimeout(() => {
+        handleClear();
+      }, 3000);
     } catch (err: any) {
       setMessage({
         type: "error",
-        text: err.response?.data?.error || "GAGAL MENYIMPAN TRANSAKSI",
+        text: err.response?.data?.error || "Gagal menyimpan",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const displayKg = kg || "0.0";
+
   return (
-    <div className="min-h-screen bg-slate-200 flex flex-col items-center p-4 md:p-8">
-      <div className="w-full max-w-5xl">
-        {/* Header */}
-        <div className="flex justify-between items-end mb-6 border-b-4 border-slate-900 pb-2">
-          <h1 className="text-2xl md:text-4xl font-black text-slate-900 italic tracking-tighter uppercase">
-            MONITORING <span className="text-blue-600">TERMINAL</span>
-          </h1>
-          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-            KASIR AREA &bull; OUTSYS
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col items-center p-4 md:p-6">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+        
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+          50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slideUp { animation: slideUp 0.4s ease-out; }
+        
+        @keyframes successPop {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+          100% { transform: scale(1); }
+        }
+        .animate-success { animation: successPop 0.6s ease-in-out; }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+      `,
+        }}
+      />
+
+      <div className="w-full max-w-6xl">
+        {/* ==========================================
+            HEADER
+            ========================================== */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Zap size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
+                Kasir Terminal
+              </h1>
+              <p className="text-xs text-slate-500 font-medium">
+                Point of Sale • Transaksi Mitra
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* RFID Status Indicator */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+              <div
+                className={`w-2 h-2 rounded-full ${rfidReady ? "bg-green-500 animate-pulse" : "bg-slate-300"}`}
+              ></div>
+              <span className="text-[11px] font-medium text-slate-500">
+                {rfidReady ? "RFID Scanner Aktif" : "Memproses..."}
+              </span>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Keluar</span>
+            </button>
           </div>
         </div>
 
-        {/* Status Message */}
-        {message.text && (
+        {/* ==========================================
+            STEP INDICATOR
+            ========================================== */}
+        <div className="flex items-center gap-0 mb-6">
           <div
-            className={`mb-6 p-5 font-black text-center border-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-3 text-lg uppercase ${
-              message.type === "success"
-                ? "bg-green-100 border-green-600 text-green-800"
-                : "bg-red-100 border-red-600 text-red-800"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              currentStep === 1
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/25"
+                : "bg-white text-slate-400 border border-slate-200"
             }`}
           >
-            {message.type === "success" ? (
-              <CheckCircle2 size={28} />
-            ) : (
-              <XCircle size={28} />
-            )}
-            {message.text}
+            <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+              1
+            </span>
+            Verifikasi Mitra
+          </div>
+          <div className="w-8 h-0.5 bg-slate-200"></div>
+          <div
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              currentStep === 2
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/25"
+                : "bg-white text-slate-400 border border-slate-200"
+            }`}
+          >
+            <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+              2
+            </span>
+            Input Berat & Simpan
+          </div>
+        </div>
+
+        {/* ==========================================
+            MESSAGE NOTIFICATION
+            ========================================== */}
+        {message.text && (
+          <div
+            className={`mb-4 p-4 rounded-2xl flex items-center gap-3 text-sm font-semibold animate-slideUp ${
+              message.type === "success"
+                ? "bg-green-50 border border-green-200 text-green-700"
+                : "bg-red-50 border border-red-200 text-red-700"
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                message.type === "success" ? "bg-green-100" : "bg-red-100"
+              }`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle2 size={20} className="text-green-600" />
+              ) : (
+                <AlertCircle size={20} className="text-red-600" />
+              )}
+            </div>
+            <span>{message.text}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* KOLOM KIRI: STACKED INPUT */}
-          <div className="space-y-4">
-            {/* BOX 1: PIN / IDENTITAS MITRA */}
-            {!mitra ? (
-              // TAMPILAN JIKA BELUM ADA MITRA (Minta PIN)
-              <div className="border-4 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-blue-600 border-slate-900 ring-4 ring-blue-300 transition-all">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-[10px] font-black uppercase text-white">
-                    1. INPUT PIN ATAU TAP KARTU
-                  </div>
-                  <div className="animate-pulse flex items-center gap-1 text-white bg-blue-800 px-2 py-1 text-[9px] font-black border border-blue-400">
-                    <CreditCard size={12} /> READY SCAN
-                  </div>
-                </div>
-                <div className="flex gap-3 justify-center">
-                  {[...Array(4)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-14 h-20 border-4 flex items-center justify-center text-5xl font-black ${
-                        pin[i]
-                          ? "bg-white border-slate-900 text-slate-900 shadow-inner"
-                          : "bg-blue-500 border-blue-400 text-transparent"
-                      }`}
-                    >
-                      {pin[i] || ""}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              // TAMPILAN JIKA MITRA SUDAH TERVERIFIKASI
-              <div className="border-4 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-green-500 border-slate-900 transition-all flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] font-black uppercase text-green-900 mb-1 flex items-center gap-1">
-                    <UserCheck size={12} /> MITRA TERIDENTIFIKASI
-                  </div>
-                  <div className="text-3xl font-black text-white uppercase tracking-tighter">
-                    {mitra.nama_penjual}
-                  </div>
-                  <div className="text-xs font-bold text-green-900">
-                    PIN: {mitra.pin} | WA: {mitra.no_whatsapp || "-"}
-                  </div>
-                </div>
-                <button
-                  onClick={handleClear}
-                  className="bg-white p-3 border-4 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white transition-all active:translate-y-1 active:translate-x-1 active:shadow-none"
-                  title="Batal Transaksi"
-                >
-                  <XCircle size={24} />
-                </button>
-              </div>
-            )}
-
-            {/* BOX 2: BERAT KG */}
+        {/* ==========================================
+            MAIN GRID
+            ========================================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* KOLOM KIRI - INFO (3/5) */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* CARD 1: VERIFIKASI MITRA */}
             <div
-              className={`border-4 transition-all p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
+              ref={pinBoxRef}
+              className={`rounded-2xl overflow-hidden transition-all duration-500 ${
+                successAnim ? "animate-success" : ""
+              } ${
                 mitra
-                  ? "bg-orange-500 border-slate-900 ring-4 ring-orange-300"
-                  : "bg-slate-100 border-slate-300 opacity-60"
+                  ? "bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 shadow-lg shadow-green-100/30"
+                  : "bg-white border-2 border-blue-200 shadow-lg shadow-blue-100/30 animate-pulse-glow"
               }`}
             >
+              {/* Card Header */}
               <div
-                className={`text-[10px] font-black uppercase mb-2 ${mitra ? "text-white" : "text-slate-400"}`}
+                className={`px-5 py-3 border-b flex items-center justify-between ${
+                  mitra
+                    ? "bg-green-100/50 border-green-200"
+                    : "bg-blue-50 border-blue-200"
+                }`}
               >
-                2. JUMLAH BERAT (KG)
+                <div className="flex items-center gap-2">
+                  {mitra ? (
+                    <UserCheck size={16} className="text-green-600" />
+                  ) : (
+                    <CreditCard size={16} className="text-blue-600" />
+                  )}
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wider ${
+                      mitra ? "text-green-700" : "text-blue-700"
+                    }`}
+                  >
+                    {mitra
+                      ? "✓ Mitra Terverifikasi"
+                      : "Langkah 1: Verifikasi Identitas"}
+                  </span>
+                </div>
+                {!mitra && (
+                  <div className="flex items-center gap-1.5">
+                    <Radio size={12} className="text-blue-500" />
+                    <span className="text-[10px] font-medium text-blue-500">
+                      RFID Ready
+                    </span>
+                  </div>
+                )}
               </div>
-              <div
-                className={`text-center text-7xl font-black italic tracking-tighter ${mitra ? "text-white" : kg ? "text-slate-800" : "text-slate-300"}`}
-              >
-                {kg || "0.0"}{" "}
-                <span className="text-xl not-italic opacity-50">KG</span>
+
+              {/* Card Body */}
+              <div className="p-5">
+                {!mitra ? (
+                  <div className="space-y-4">
+                    {/* Instruksi */}
+                    <div className="grid grid-cols-2 gap-3 mb-2">
+                      <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CreditCard size={14} className="text-blue-600" />
+                          <span className="text-[11px] font-bold text-blue-700">
+                            TAP KARTU RFID
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-blue-500 leading-relaxed">
+                          Tempelkan kartu RFID ke scanner. Kursor tidak perlu
+                          diarahkan ke mana pun.
+                        </p>
+                      </div>
+                      <div className="bg-amber-50 rounded-xl p-3 border border-amber-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Smartphone size={14} className="text-amber-600" />
+                          <span className="text-[11px] font-bold text-amber-700">
+                            KETIK PIN 4 DIGIT
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-amber-500 leading-relaxed">
+                          Gunakan numpad di samping. PIN akan otomatis
+                          diverifikasi setelah 4 digit.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* PIN Display */}
+                    <div className="flex gap-3 justify-center">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`w-16 h-20 rounded-xl border-2 flex items-center justify-center text-3xl font-bold transition-all ${
+                            pin[i]
+                              ? "bg-blue-500 border-blue-600 text-white shadow-lg shadow-blue-500/25"
+                              : "bg-slate-50 border-slate-200 text-transparent"
+                          } ${pin.length === i ? "border-blue-400 ring-4 ring-blue-100" : ""}`}
+                        >
+                          {pin[i] || ""}
+                        </div>
+                      ))}
+                    </div>
+
+                    {pin.length > 0 && pin.length < 4 && (
+                      <p className="text-center text-[10px] text-slate-400 mt-3">
+                        Lanjutkan mengetik... ({4 - pin.length} digit lagi)
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/25">
+                        <UserCheck size={26} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-slate-800">
+                          {mitra.nama_penjual}
+                        </p>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-xs text-slate-500 font-mono">
+                            PIN: {mitra.pin}
+                          </span>
+                          {mitra.no_whatsapp && (
+                            <span className="text-xs text-slate-400">
+                              WA: {mitra.no_whatsapp}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleClear}
+                      className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all shadow-sm"
+                      title="Batalkan & Mulai Ulang"
+                    >
+                      <XCircle size={22} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Clear & Logout (Tablet Desktop View) */}
-            <div className="hidden lg:grid grid-cols-2 gap-4 mt-4">
+            {/* CARD 2: INPUT BERAT */}
+            <div
+              className={`rounded-2xl overflow-hidden transition-all duration-500 border-2 ${
+                mitra
+                  ? "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-300 shadow-lg shadow-orange-100/30"
+                  : "bg-white border-slate-200 opacity-50"
+              }`}
+            >
+              <div
+                className={`px-5 py-3 border-b ${
+                  mitra
+                    ? "bg-orange-100/50 border-orange-200"
+                    : "bg-slate-50 border-slate-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Scale
+                    size={16}
+                    className={mitra ? "text-orange-600" : "text-slate-400"}
+                  />
+                  <span
+                    className={`text-xs font-semibold uppercase tracking-wider ${
+                      mitra ? "text-orange-700" : "text-slate-400"
+                    }`}
+                  >
+                    Langkah 2: Jumlah Berat (KG)
+                  </span>
+                </div>
+              </div>
+              <div className="p-5">
+                <div className="flex items-end justify-center gap-2 mb-4">
+                  <span
+                    className={`text-7xl font-bold tracking-tight ${mitra ? "text-slate-800" : "text-slate-300"}`}
+                  >
+                    {displayKg}
+                  </span>
+                  <span className="text-2xl text-slate-400 mb-2 font-medium">
+                    KG
+                  </span>
+                </div>
+
+                <input
+                  ref={kgInputRef}
+                  type="text"
+                  value={kg}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                    if (val.split(".").length > 2) return;
+                    if (val.replace(".", "").length > 5) return;
+                    setKg(val);
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl text-center text-lg font-semibold transition-all ${
+                    mitra
+                      ? "border-2 border-orange-300 bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none"
+                      : "border-2 border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
+                  }`}
+                  placeholder={
+                    mitra
+                      ? "Ketik berat atau gunakan numpad..."
+                      : "Silakan verifikasi mitra terlebih dahulu"
+                  }
+                  disabled={!mitra}
+                />
+
+                {mitra && (
+                  <p className="text-center text-[10px] text-slate-400 mt-2">
+                    Gunakan numpad di samping atau ketik langsung
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* DESKTOP ACTION BUTTONS */}
+            <div className="hidden lg:grid grid-cols-2 gap-3">
               <button
                 onClick={handleClear}
-                className="py-4 border-4 border-slate-900 bg-white font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-slate-100 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
               >
-                Clear Flow
+                <RotateCcw size={16} /> Reset Semua
               </button>
               <button
                 onClick={handleLogout}
-                className="py-4 border-4 border-slate-900 bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-slate-800 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                className="flex items-center justify-center gap-2 py-3.5 bg-slate-800 text-white rounded-2xl text-sm font-medium hover:bg-slate-700 transition-all shadow-sm"
               >
-                Logout System
+                <LogOut size={16} /> Keluar Sistem
               </button>
             </div>
           </div>
 
-          {/* KOLOM KANAN: NUMPAD */}
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-3 gap-3 bg-slate-800 p-4 border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0].map((num) => (
+          {/* KOLOM KANAN - NUMPAD (2/5) */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            {/* Numpad */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <div className="grid grid-cols-3 gap-2.5">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleNumpad(num.toString())}
+                    className="h-20 md:h-24 bg-slate-50 border border-slate-200 rounded-2xl text-3xl font-bold text-slate-700 hover:bg-white hover:border-blue-300 hover:text-blue-600 hover:shadow-md active:bg-blue-50 active:scale-95 transition-all"
+                  >
+                    {num}
+                  </button>
+                ))}
                 <button
-                  key={num}
-                  onClick={() => handleNumpad(num.toString())}
-                  className="h-20 md:h-24 bg-white border-4 border-slate-900 font-black text-4xl text-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-slate-100 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+                  onClick={handleBackspace}
+                  className="h-20 md:h-24 bg-red-50 border border-red-200 rounded-2xl text-red-500 hover:bg-red-100 hover:border-red-300 active:scale-95 transition-all flex items-center justify-center"
                 >
-                  {num}
+                  <Delete size={32} />
                 </button>
-              ))}
-              <button
-                onClick={handleBackspace}
-                className="h-20 md:h-24 bg-red-500 border-4 border-slate-900 text-white font-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
-              >
-                <Delete size={40} />
-              </button>
+              </div>
             </div>
 
-            {/* TOMBOL SIMPAN (Hanya aktif jika mitra sudah ada) */}
+            {/* Submit Button */}
             <button
               onClick={handleSubmit}
               disabled={loading || !mitra}
-              className={`w-full py-8 border-4 border-slate-900 font-black text-4xl uppercase tracking-tighter shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all ${
-                loading || !mitra
-                  ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none translate-x-1 translate-y-1"
-                  : "bg-blue-600 text-white hover:bg-blue-700 active:translate-x-2 active:translate-y-2 active:shadow-none"
+              className={`w-full py-7 rounded-2xl text-xl font-bold transition-all flex items-center justify-center gap-3 ${
+                loading
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : successAnim
+                    ? "bg-green-500 text-white shadow-xl shadow-green-500/30"
+                    : mitra
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-xl shadow-blue-500/30 active:scale-[0.98]"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed border-2 border-dashed border-slate-300"
               }`}
             >
-              {loading ? "SAVING..." : "SIMPAN DATA"}
+              {loading ? (
+                <>
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Menyimpan...
+                </>
+              ) : successAnim ? (
+                <>
+                  <CheckCircle2 size={26} /> Transaksi Berhasil!
+                </>
+              ) : mitra ? (
+                <>
+                  <Send size={24} /> Simpan Transaksi
+                </>
+              ) : (
+                <>
+                  <ArrowRight size={24} /> Verifikasi Mitra Dulu
+                </>
+              )}
             </button>
 
-            {/* Action Buttons (Mobile View) */}
-            <div className="grid lg:hidden grid-cols-2 gap-4">
+            {/* Quick Info */}
+            {!mitra && (
+              <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100 animate-float">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+                    <Radio size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-blue-800 mb-1">
+                      Scanner RFID Aktif
+                    </p>
+                    <p className="text-xs text-blue-600 leading-relaxed">
+                      Tempelkan kartu RFID mitra ke scanner, atau ketik PIN 4
+                      digit menggunakan numpad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {mitra && (
+              <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-green-500/25">
+                    <Package size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-green-800 mb-1">
+                      Siap Input Berat
+                    </p>
+                    <p className="text-xs text-green-600 leading-relaxed">
+                      Masukkan jumlah KG menggunakan numpad atau ketik langsung,
+                      lalu klik Simpan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MOBILE ACTION BUTTONS */}
+            <div className="grid lg:hidden grid-cols-2 gap-3">
               <button
                 onClick={handleClear}
-                className="py-4 border-4 border-slate-900 bg-white font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                className="flex items-center justify-center gap-2 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-600 shadow-sm"
               >
-                Clear
+                <RotateCcw size={16} /> Reset
               </button>
               <button
                 onClick={handleLogout}
-                className="py-4 border-4 border-slate-900 bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                className="flex items-center justify-center gap-2 py-3.5 bg-slate-800 text-white rounded-2xl text-sm font-medium shadow-sm"
               >
-                Logout
+                <LogOut size={16} /> Keluar
               </button>
             </div>
           </div>

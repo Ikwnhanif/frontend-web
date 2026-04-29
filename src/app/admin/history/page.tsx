@@ -315,7 +315,6 @@ export default function HistoryPage() {
     <div className="p-4 md:p-8">
       {/* Toast Notification Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
-
       {/* CSS UNTUK PRINT - SEPERTI HALAMAN PEMINJAMAN */}
       <style
         dangerouslySetInnerHTML={{
@@ -346,7 +345,6 @@ export default function HistoryPage() {
           `,
         }}
       />
-
       {/* DOKUMEN CETAK - MUNCUL HANYA SAAT PRINT */}
       {printData && (
         <div className="hidden print-only font-sans text-black leading-relaxed">
@@ -476,126 +474,127 @@ export default function HistoryPage() {
           </div>
         </div>
       )}
-
       {/* UI WEB UTAMA */}
       <div className="no-print">
-        {/* Header & Date Picker */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase flex items-center gap-3">
-              <FileText size={32} className="text-blue-600" /> History Transaksi
+        {/* Header & Date Picker - RESPONSIVE */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <div className="shrink-0">
+            <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter uppercase flex items-center gap-2 md:gap-3">
+              <FileText size={24} className="text-blue-600 md:hidden" />
+              <FileText size={32} className="text-blue-600 hidden md:block" />
+              History Transaksi
             </h1>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+            <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
               Laporan Harian Penjualan Mitra
             </p>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="bg-white border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-3 flex items-center gap-3">
-              <label className="text-[10px] font-black uppercase text-slate-500 pl-2">
-                Pilih Tanggal:
-              </label>
-              <div className="relative">
-                <Calendar
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={16}
-                />
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="pl-10 pr-4 py-2 border-2 border-slate-200 focus:border-blue-600 focus:outline-none font-black text-slate-800 cursor-pointer text-sm"
-                />
-              </div>
+          {/* Filter & Action Bar */}
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            {/* Date Filter Compact */}
+            <div className="flex items-center gap-1.5 md:gap-2 bg-white border-2 md:border-4 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-2 md:p-3">
+              <Calendar size={14} className="text-slate-400 shrink-0" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-[130px] md:w-auto py-1.5 md:py-2 px-2 border-2 border-slate-200 focus:border-blue-600 focus:outline-none font-bold text-xs md:text-sm text-slate-800 cursor-pointer bg-white rounded"
+              />
               <button
                 onClick={fetchHistory}
-                className="bg-slate-900 text-white px-4 py-2 font-black text-xs uppercase hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="bg-slate-900 text-white p-1.5 md:px-3 md:py-2 font-black text-[10px] md:text-xs uppercase hover:bg-blue-700 transition-colors flex items-center gap-1 md:gap-2 shrink-0 rounded"
               >
-                <Search size={14} /> Cari
+                <Search size={14} />
+                <span className="hidden md:inline">Cari</span>
               </button>
             </div>
 
+            {/* Print Button Compact */}
             <button
               onClick={handlePrint}
               disabled={historyData.length === 0}
-              className="bg-green-600 text-white px-6 py-3 font-black text-xs uppercase tracking-widest border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-700 transition-all active:translate-x-1 active:translate-y-1 active:shadow-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-green-600 text-white p-2 md:px-5 md:py-2.5 font-black text-[10px] md:text-xs uppercase tracking-wider border-2 md:border-4 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] md:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-700 transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-none flex items-center gap-1 md:gap-2 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 rounded"
             >
-              <Printer size={18} /> Cetak Laporan
+              <Printer size={16} />
+              <span className="hidden md:inline">Cetak Laporan</span>
             </button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white border-4 border-slate-900 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 text-blue-600 border border-blue-300">
-                <TrendingUp size={20} />
+        {/* Stats Cards - RESPONSIVE */}
+        <div className="grid grid-cols-2 gap-3 md:gap-6 mb-6 md:mb-8">
+          <div className="bg-white border-2 md:border-4 border-slate-900 p-3 md:p-6 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+              <div className="p-1.5 md:p-2 bg-blue-100 text-blue-600 border border-blue-300">
+                <TrendingUp size={16} className="md:w-5 md:h-5" />
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider">
                 Total Pengambilan
               </p>
             </div>
-            <div className="text-4xl font-black text-blue-700">
+            <div className="text-2xl md:text-4xl font-black text-blue-700">
               {Number(stats.total_kg).toFixed(2)}{" "}
-              <span className="text-lg text-slate-400">KG</span>
+              <span className="text-sm md:text-lg text-slate-400">KG</span>
             </div>
           </div>
-          <div className="bg-white border-4 border-slate-900 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 text-green-600 border border-green-300">
-                <Users size={20} />
+          <div className="bg-white border-2 md:border-4 border-slate-900 p-3 md:p-6 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] md:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
+              <div className="p-1.5 md:p-2 bg-green-100 text-green-600 border border-green-300">
+                <Users size={16} className="md:w-5 md:h-5" />
               </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                Penjual Aktif(Ambil Mie)
+              <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                Penjual Aktif
               </p>
             </div>
-            <div className="text-4xl font-black text-slate-800">
+            <div className="text-2xl md:text-4xl font-black text-slate-800">
               {stats.total_hadir}{" "}
-              <span className="text-lg text-slate-400">Orang</span>
+              <span className="text-sm md:text-lg text-slate-400">Orang</span>
             </div>
           </div>
         </div>
 
-        {/* Tabel Data */}
-        <div className="bg-white border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="bg-slate-800 p-4 border-b-4 border-slate-900 flex justify-between items-center">
-            <h2 className="text-white font-black text-xs uppercase tracking-widest flex items-center gap-2">
-              <Calendar size={14} className="text-blue-400" />
-              Data Penjual:{" "}
-              <span className="text-blue-400">{formatDate(selectedDate)}</span>
+        {/* Tabel Data - RESPONSIVE */}
+        <div className="bg-white border-2 md:border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] md:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-slate-800 p-3 md:p-4 border-b-2 md:border-b-4 border-slate-900 flex justify-between items-center flex-wrap gap-2">
+            <h2 className="text-white font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1 md:gap-2">
+              <Calendar size={12} className="text-blue-400 md:hidden" />
+              <Calendar size={14} className="text-blue-400 hidden md:block" />
+              <span className="hidden md:inline">Data Penjual: </span>
+              <span className="text-blue-400 truncate max-w-[180px] md:max-w-none">
+                {formatDate(selectedDate)}
+              </span>
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {loading && (
-                <span className="text-[10px] text-white font-bold uppercase animate-pulse">
+                <span className="text-[9px] md:text-[10px] text-white font-bold uppercase animate-pulse">
                   Memuat...
                 </span>
               )}
-              <span className="text-[10px] text-white font-bold uppercase bg-blue-600 px-3 py-1">
+              <span className="text-[9px] md:text-[10px] text-white font-bold uppercase bg-blue-600 px-2 md:px-3 py-0.5 md:py-1 rounded">
                 {historyData.length} Data
               </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto min-h-[400px]">
+          <div className="overflow-x-auto min-h-[300px] md:min-h-[400px]">
             <table className="w-full text-left">
-              <thead className="bg-slate-100 border-b-4 border-slate-800">
+              <thead className="bg-slate-100 border-b-2 md:border-b-4 border-slate-800">
                 <tr>
-                  <th className="p-4 text-[10px] font-black uppercase w-12 text-center">
+                  <th className="p-2 md:p-4 text-[8px] md:text-[10px] font-black uppercase w-8 md:w-12 text-center">
                     No
                   </th>
-                  <th className="p-4 text-[10px] font-black uppercase">
+                  <th className="p-2 md:p-4 text-[8px] md:text-[10px] font-black uppercase">
                     Informasi Penjual
                   </th>
-                  <th className="p-4 text-[10px] font-black uppercase text-center w-28">
+                  <th className="p-2 md:p-4 text-[8px] md:text-[10px] font-black uppercase text-center w-20 md:w-28">
                     Status
                   </th>
-                  <th className="p-4 text-[10px] font-black uppercase text-right w-32">
+                  <th className="p-2 md:p-4 text-[8px] md:text-[10px] font-black uppercase text-right w-24 md:w-32">
                     Total KG
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y-2 border-slate-100">
+              <tbody className="divide-y divide-slate-100">
                 {currentItems.length > 0 ? (
                   currentItems.map((row: any, i) => (
                     <tr
@@ -604,31 +603,31 @@ export default function HistoryPage() {
                         Number(row.jumlah_kg) === 0 ? "bg-red-50/30" : ""
                       }`}
                     >
-                      <td className="p-4 border-r-2 border-slate-100 font-black text-slate-400 w-12 text-center">
+                      <td className="p-2 md:p-4 border-r border-slate-100 font-black text-slate-400 w-8 md:w-12 text-center text-xs md:text-sm">
                         {indexOfFirstItem + i + 1}
                       </td>
-                      <td className="p-4 border-r-2 border-slate-100">
-                        <p className="font-black text-slate-800 uppercase text-sm">
+                      <td className="p-2 md:p-4 border-r border-slate-100">
+                        <p className="font-black text-slate-800 uppercase text-xs md:text-sm leading-tight">
                           {row.nama_penjual}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">
+                        <p className="text-[8px] md:text-[10px] text-slate-400 font-bold uppercase mt-0.5">
                           {row.nama_warung || "TANPA WARUNG"}
                         </p>
                       </td>
-                      <td className="p-4 text-center border-r-2 border-slate-100">
+                      <td className="p-2 md:p-4 text-center border-r border-slate-100">
                         {Number(row.jumlah_kg) > 0 ? (
-                          <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1.5 text-[10px] font-black uppercase border-2 border-green-600 shadow-[2px_2px_0px_0px_rgba(34,197,94,0.5)]">
-                            <CheckCircle size={12} /> Jualan
+                          <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[10px] font-black uppercase border md:border-2 border-green-600 shadow-[1px_1px_0px_0px_rgba(34,197,94,0.5)] rounded">
+                            <CheckCircle size={10} /> Jualan
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1.5 text-[10px] font-black uppercase border-2 border-red-600 shadow-[2px_2px_0px_0px_rgba(239,68,68,0.5)]">
-                            <XCircle size={12} /> Libur
+                          <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-1.5 md:px-3 py-1 md:py-1.5 text-[8px] md:text-[10px] font-black uppercase border md:border-2 border-red-600 shadow-[1px_1px_0px_0px_rgba(239,68,68,0.5)] rounded">
+                            <XCircle size={10} /> Libur
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-2 md:p-4 text-right">
                         <span
-                          className={`text-xl font-black font-mono ${
+                          className={`text-sm md:text-xl font-black font-mono ${
                             Number(row.jumlah_kg) > 0
                               ? "text-blue-700"
                               : "text-slate-300"
@@ -636,7 +635,7 @@ export default function HistoryPage() {
                         >
                           {Number(row.jumlah_kg).toFixed(2)}
                         </span>
-                        <span className="text-[10px] text-slate-400 ml-1">
+                        <span className="text-[8px] md:text-[10px] text-slate-400 ml-0.5 md:ml-1">
                           KG
                         </span>
                       </td>
@@ -646,7 +645,7 @@ export default function HistoryPage() {
                   <tr>
                     <td
                       colSpan={4}
-                      className="p-12 text-center text-slate-400 font-bold uppercase text-xs"
+                      className="p-8 md:p-12 text-center text-slate-400 font-bold uppercase text-xs"
                     >
                       {loading ? (
                         <span className="animate-pulse">Memuat data...</span>

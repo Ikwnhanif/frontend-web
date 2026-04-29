@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MIE SYSTEM | H.ENGINE",
-  description: "Management System for Noodle Suppliers",
+  title: "MIE SPECIALL",
+  description: "Management System for Mie Supplier & Assets",
 };
 
 export default function RootLayout({

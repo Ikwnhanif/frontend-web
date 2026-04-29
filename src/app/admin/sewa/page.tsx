@@ -12,10 +12,13 @@ import {
   XCircle,
   AlertTriangle,
   Info,
+  Box,
+  DollarSign,
+  Tag,
 } from "lucide-react";
 
 // ==========================================
-// KOMPONEN TOAST NOTIFICATION
+// TOAST NOTIFICATION (Modern)
 // ==========================================
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -34,62 +37,49 @@ const ToastContainer = ({
   onClose: (id: number) => void;
 }) => {
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full">
+    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm w-full no-print">
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className={`
-            border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] 
-            animate-slideIn bg-white overflow-hidden
-            ${toast.type === "success" ? "border-l-green-500" : ""}
-            ${toast.type === "error" ? "border-l-red-500" : ""}
-            ${toast.type === "info" ? "border-l-blue-500" : ""}
-            ${toast.type === "warning" ? "border-l-yellow-500" : ""}
+            bg-white rounded-xl shadow-lg border border-slate-200 animate-slideIn overflow-hidden
+            ${toast.type === "success" ? "border-l-4 border-l-green-500" : ""}
+            ${toast.type === "error" ? "border-l-4 border-l-red-500" : ""}
+            ${toast.type === "info" ? "border-l-4 border-l-blue-500" : ""}
+            ${toast.type === "warning" ? "border-l-4 border-l-yellow-500" : ""}
           `}
-          style={{ borderLeftWidth: "12px" }}
         >
           <div className="p-4 flex items-start gap-3">
             <div className="shrink-0 mt-0.5">
               {toast.type === "success" && (
-                <CheckCircle2 size={20} className="text-green-600" />
+                <CheckCircle2 size={18} className="text-green-500" />
               )}
               {toast.type === "error" && (
-                <XCircle size={20} className="text-red-600" />
+                <XCircle size={18} className="text-red-500" />
               )}
               {toast.type === "info" && (
-                <Info size={20} className="text-blue-600" />
+                <Info size={18} className="text-blue-500" />
               )}
               {toast.type === "warning" && (
-                <AlertTriangle size={20} className="text-yellow-600" />
+                <AlertTriangle size={18} className="text-yellow-500" />
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-black text-xs uppercase text-slate-800 mb-1">
+              <p className="text-sm font-semibold text-slate-800">
                 {toast.title}
-              </div>
-              <div className="text-[11px] font-bold text-slate-600 leading-tight">
-                {toast.message}
-              </div>
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">{toast.message}</p>
             </div>
             <button
               onClick={() => onClose(toast.id)}
-              className="shrink-0 text-slate-400 hover:text-slate-600 transition-colors"
+              className="shrink-0 text-slate-400 hover:text-slate-600"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           </div>
-          {/* Progress Bar */}
           <div className="h-1 bg-slate-100">
             <div
-              className={`h-full animate-shrink ${
-                toast.type === "success"
-                  ? "bg-green-500"
-                  : toast.type === "error"
-                    ? "bg-red-500"
-                    : toast.type === "warning"
-                      ? "bg-yellow-500"
-                      : "bg-blue-500"
-              }`}
+              className={`h-full animate-shrink ${toast.type === "success" ? "bg-green-500" : toast.type === "error" ? "bg-red-500" : toast.type === "warning" ? "bg-yellow-500" : "bg-blue-500"}`}
             />
           </div>
         </div>
@@ -99,79 +89,57 @@ const ToastContainer = ({
 };
 
 // ==========================================
-// MODAL KONFIRMASI DELETE
+// MODAL KONFIRMASI DELETE (Modern)
 // ==========================================
 const ConfirmDialog = ({
   isOpen,
   onClose,
   onConfirm,
-  title,
-  message,
   itemName,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  title: string;
-  message: string;
   itemName: string;
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
-      <div className="bg-white border-4 border-red-500 w-full max-w-md shadow-[8px_8px_0px_0px_rgba(239,68,68,1)]">
-        <div className="bg-red-500 p-4 flex justify-between items-center">
-          <h2 className="text-white font-black uppercase tracking-widest text-xs flex items-center gap-2">
-            <AlertTriangle size={16} /> {title}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] no-print">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+        <div className="px-6 py-4 border-b border-red-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+            <AlertTriangle size={18} /> Nonaktifkan Aset
           </h2>
           <button
-            type="button"
             onClick={onClose}
-            className="text-white hover:text-red-200"
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
           >
-            <X />
+            <X size={18} />
           </button>
         </div>
-
         <div className="p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-red-100 text-red-600">
-              <AlertTriangle size={24} />
-            </div>
-            <div>
-              <p className="font-black text-sm uppercase text-slate-800 mb-2">
-                {message}
-              </p>
-              <div className="bg-slate-50 border-2 border-slate-200 p-3">
-                <div className="text-xs font-bold text-slate-600">
-                  <span className="uppercase text-slate-400">Aset: </span>
-                  <span className="text-slate-800 font-black">{itemName}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4">
-            <p className="text-xs font-bold text-yellow-800 uppercase">
-              ⚠️ Aset yang dinonaktifkan tidak bisa disewa lagi oleh mitra.
+          <div className="bg-red-50 rounded-xl p-4 mb-4 border border-red-100">
+            <p className="text-sm font-medium text-red-800">{itemName}</p>
+            <p className="text-xs text-red-600 mt-1">
+              Aset ini akan dinonaktifkan dari katalog
             </p>
           </div>
-
+          <p className="text-sm text-slate-600 mb-4">
+            Aset yang dinonaktifkan tidak bisa disewa lagi oleh mitra.
+          </p>
           <div className="flex gap-3">
             <button
-              type="button"
               onClick={onClose}
-              className="flex-1 py-4 font-black uppercase text-xs border-4 border-slate-900 hover:bg-slate-50 transition-all active:translate-y-1"
+              className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all"
             >
               Batal
             </button>
             <button
-              type="button"
               onClick={onConfirm}
-              className="flex-1 py-4 bg-red-500 text-white font-black uppercase text-xs border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 transition-all active:translate-x-1 active:translate-y-1 active:shadow-none"
+              className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition-all shadow-sm"
             >
-              Ya, Nonaktifkan!
+              Nonaktifkan
             </button>
           </div>
         </div>
@@ -186,7 +154,6 @@ export default function MasterSewaPage() {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // State Form
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -195,29 +162,23 @@ export default function MasterSewaPage() {
     is_active: true,
   });
 
-  // State untuk konfirmasi delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<any>(null);
 
-  // State Toast Notification
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastIdRef = useRef(0);
 
-  // Fungsi untuk menampilkan toast
   const showToast = (type: ToastType, title: string, message: string) => {
     const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, type, title, message }]);
-
-    // Auto-remove setelah 4 detik
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    setTimeout(
+      () => setToasts((prev) => prev.filter((t) => t.id !== id)),
+      4000,
+    );
   };
 
-  // Fungsi untuk menghapus toast manual
-  const removeToast = (id: number) => {
+  const removeToast = (id: number) =>
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
 
   const fetchKatalog = async () => {
     try {
@@ -225,11 +186,10 @@ export default function MasterSewaPage() {
       const res = await api.get("/admin/sewa/katalog");
       setKatalog(res.data || []);
     } catch (err) {
-      console.error("Gagal load data katalog");
       showToast(
         "error",
-        "GAGAL MEMUAT DATA",
-        "Tidak dapat mengambil data katalog aset. Periksa koneksi Anda.",
+        "Gagal Memuat Data",
+        "Tidak dapat mengambil data katalog aset.",
       );
     } finally {
       setLoading(false);
@@ -265,25 +225,21 @@ export default function MasterSewaPage() {
 
   const handleDelete = async () => {
     if (!itemToDelete) return;
-
     try {
       await api.delete(`/admin/sewa/katalog/${itemToDelete.id}`);
-
       showToast(
         "success",
-        "ASET DINONAKTIFKAN",
-        `Aset "${itemToDelete.nama_aset}" berhasil dinonaktifkan dan tidak bisa disewa lagi.`,
+        "Aset Dinonaktifkan",
+        `"${itemToDelete.nama_aset}" berhasil dinonaktifkan.`,
       );
-
       setShowDeleteConfirm(false);
       setItemToDelete(null);
       fetchKatalog();
     } catch (err: any) {
       showToast(
         "error",
-        "GAGAL MENONAKTIFKAN",
-        err.response?.data?.error ||
-          "Terjadi kesalahan saat menonaktifkan aset.",
+        "Gagal Menonaktifkan",
+        err.response?.data?.error || "Terjadi kesalahan.",
       );
     }
   };
@@ -301,15 +257,15 @@ export default function MasterSewaPage() {
         await api.put(`/admin/sewa/katalog/${editId}`, payload);
         showToast(
           "success",
-          "ASET BERHASIL DIUPDATE",
-          `Data aset "${formData.nama_aset}" telah berhasil diperbarui dengan tarif ${formatRupiah(parseFloat(formData.harga_hari))}/hari.`,
+          "Aset Berhasil Diupdate",
+          `"${formData.nama_aset}" diperbarui dengan tarif ${formatRupiah(parseFloat(formData.harga_hari))}/hari.`,
         );
       } else {
         await api.post("/admin/sewa/katalog", payload);
         showToast(
           "success",
-          "ASET BARU DITAMBAHKAN",
-          `Aset "${formData.nama_aset}" berhasil ditambahkan ke katalog dengan tarif ${formatRupiah(parseFloat(formData.harga_hari))}/hari.`,
+          "Aset Baru Ditambahkan",
+          `"${formData.nama_aset}" ditambahkan ke katalog.`,
         );
       }
       setShowModal(false);
@@ -317,9 +273,8 @@ export default function MasterSewaPage() {
     } catch (err: any) {
       showToast(
         "error",
-        "GAGAL MENYIMPAN DATA",
-        err.response?.data?.error ||
-          "Terjadi kesalahan saat menyimpan data aset. Pastikan nama aset tidak duplikat.",
+        "Gagal Menyimpan",
+        err.response?.data?.error || "Pastikan nama aset tidak duplikat.",
       );
     }
   };
@@ -336,12 +291,14 @@ export default function MasterSewaPage() {
     }).format(angka);
   };
 
-  return (
-    <div className="p-4 md:p-8">
-      {/* Toast Notification Container */}
-      <ToastContainer toasts={toasts} onClose={removeToast} />
+  // Hitung statistik
+  const totalAset = katalog.length;
+  const asetAktif = katalog.filter((k: any) => k.is_active).length;
+  const asetNonaktif = totalAset - asetAktif;
 
-      {/* Modal Konfirmasi Delete */}
+  return (
+    <div className="p-4 md:p-6 lg:p-8">
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         onClose={() => {
@@ -349,260 +306,298 @@ export default function MasterSewaPage() {
           setItemToDelete(null);
         }}
         onConfirm={handleDelete}
-        title="Konfirmasi Nonaktifkan"
-        message="Anda akan menonaktifkan aset berikut:"
         itemName={itemToDelete?.nama_aset || ""}
       />
 
-      {/* CSS untuk animasi toast */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
-            @keyframes slideIn {
-              from {
-                transform: translateX(100%);
-                opacity: 0;
-              }
-              to {
-                transform: translateX(0);
-                opacity: 1;
-              }
-            }
-            
-            @keyframes shrink {
-              from {
-                width: 100%;
-              }
-              to {
-                width: 0%;
-              }
-            }
-            
-            .animate-slideIn {
-              animation: slideIn 0.3s ease-out;
-            }
-            
-            .animate-shrink {
-              animation: shrink 4s linear forwards;
-            }
-          `,
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+        .animate-slideIn { animation: slideIn 0.3s ease-out; }
+        .animate-shrink { animation: shrink 4s linear forwards; }
+      `,
         }}
       />
 
-      {/* HEADER & TAB NAVIGASI */}
-      <div className="mb-8">
-        <div className="flex gap-4 border-b-4 border-slate-900 pb-4 mb-4">
-          <button className="bg-slate-900 text-white font-black px-6 py-2 uppercase text-xs tracking-widest border-4 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-            Katalog Aset
-          </button>
-          <button
-            onClick={() => (window.location.href = "/admin/sewa/peminjaman")}
-            className="bg-slate-200 text-slate-500 hover:bg-slate-300 font-black px-6 py-2 uppercase text-xs tracking-widest border-4 border-transparent transition-colors shadow-none"
-          >
-            Sirkulasi Peminjaman
-          </button>
-        </div>
+      {/* TAB NAVIGASI */}
+      <div className="flex gap-2 mb-6">
+        <button className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-semibold shadow-sm">
+          Katalog Aset
+        </button>
+        <button
+          onClick={() => (window.location.href = "/admin/sewa/peminjaman")}
+          className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 transition-all"
+        >
+          Sirkulasi Peminjaman
+        </button>
+      </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase flex items-center gap-3">
-              <Package size={32} className="text-orange-500" /> Master Aset Sewa
-            </h1>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
-              Katalog Barang & Tarif Pinjaman Mitra
-            </p>
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+            <Box size={28} className="text-orange-500" />
+            Master Aset Sewa
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Katalog barang & tarif pinjaman mitra
+          </p>
+        </div>
+        <button
+          onClick={handleAddClick}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm shadow-orange-500/25"
+        >
+          <PackagePlus size={16} /> Tambah Aset Baru
+        </button>
+      </div>
+
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+              <Package size={16} className="text-blue-600" />
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase">
+              Total
+            </span>
           </div>
-          <button
-            onClick={handleAddClick}
-            className="flex items-center gap-2 bg-orange-500 text-white px-6 py-3 font-black text-xs uppercase tracking-widest border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-orange-600 transition-all active:translate-x-1 active:translate-y-1 active:shadow-none"
-          >
-            <PackagePlus size={18} /> Tambah Aset Baru
-          </button>
+          <p className="text-2xl font-bold text-slate-800">{totalAset}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+              <CheckCircle2 size={16} className="text-green-600" />
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase">
+              Aktif
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-green-600">{asetAktif}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+              <XCircle size={16} className="text-red-500" />
+            </div>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase">
+              Nonaktif
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-red-500">{asetNonaktif}</p>
         </div>
       </div>
 
       {/* SEARCH */}
       <div className="mb-6 relative max-w-md">
-        <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
-          <Search size={18} />
-        </span>
+        <Search
+          size={18}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+        />
         <input
           type="text"
           placeholder="Cari nama aset..."
-          className="w-full pl-12 p-4 border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none font-black text-sm uppercase placeholder:text-slate-300 focus:border-orange-500 transition-colors"
+          value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm font-medium text-slate-800 placeholder:text-slate-400 transition-all"
         />
       </div>
 
-      {/* TABEL DATA */}
-      <div className="bg-white border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-x-auto">
-        <table className="w-full text-left min-w-[600px]">
-          <thead className="bg-slate-800 text-white text-[10px] uppercase font-black tracking-widest border-b-4 border-slate-900">
-            <tr>
-              <th className="p-4">ID</th>
-              <th className="p-4">Nama Aset / Barang</th>
-              <th className="p-4 text-right">Tarif Sewa (Per Hari)</th>
-              <th className="p-4 text-center border-l-4 border-slate-900">
-                Aksi
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y-2 border-slate-100">
-            {filtered.map((item: any) => (
-              <tr
-                key={item.id}
-                className={`hover:bg-orange-50 transition-colors ${!item.is_active ? "bg-slate-50 opacity-60 grayscale" : ""}`}
-              >
-                <td className="p-4 font-mono text-xs font-bold text-slate-500">
-                  AST-{item.id.toString().padStart(3, "0")}
-                </td>
-                <td className="p-4">
-                  <div className="font-black text-slate-800 uppercase text-sm flex items-center gap-2">
-                    {item.nama_aset}
-                    {!item.is_active && (
-                      <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 border border-red-200">
-                        NONAKTIF
+      {/* TABLE */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-24">
+                  ID
+                </th>
+                <th className="px-5 py-3.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Nama Aset
+                </th>
+                <th className="px-5 py-3.5 text-right text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  Tarif / Hari
+                </th>
+                <th className="px-5 py-3.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-28">
+                  Status
+                </th>
+                <th className="px-5 py-3.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-24">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((item: any) => (
+                <tr
+                  key={item.id}
+                  className={`hover:bg-slate-50/50 transition-colors ${!item.is_active ? "opacity-50 bg-slate-50" : ""}`}
+                >
+                  <td className="px-5 py-4">
+                    <span className="inline-block bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg font-mono text-[11px] font-semibold">
+                      AST-{item.id.toString().padStart(3, "0")}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                        <Box size={14} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {item.nama_aset}
+                        </p>
+                        {!item.is_active && (
+                          <span className="text-[10px] text-red-500 font-medium">
+                            Nonaktif
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <span className="text-sm font-bold text-slate-800 font-mono">
+                      {formatRupiah(item.harga_hari)}
+                    </span>
+                    <span className="text-[11px] text-slate-400 ml-1">
+                      /hari
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-center">
+                    {item.is_active ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 text-[11px] font-medium rounded-full">
+                        <CheckCircle2 size={12} /> Aktif
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-500 text-[11px] font-medium rounded-full">
+                        <XCircle size={12} /> Nonaktif
                       </span>
                     )}
-                  </div>
-                </td>
-                <td className="p-4 text-right">
-                  <span className="inline-block bg-slate-100 text-slate-800 px-4 py-2 font-mono font-black text-lg border-2 border-slate-300">
-                    {formatRupiah(item.harga_hari)}{" "}
-                    <span className="text-xs text-slate-400">/hr</span>
-                  </span>
-                </td>
-                <td className="p-4 align-middle text-center border-l-4 border-slate-100">
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => handleEditClick(item)}
-                      className="p-3 bg-white border-4 border-slate-900 text-slate-900 hover:bg-orange-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                      title="Edit Aset"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    {item.is_active && (
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex justify-center gap-1.5">
                       <button
-                        onClick={() => handleDeleteClick(item)}
-                        className="p-3 bg-red-100 border-4 border-slate-900 text-red-600 hover:bg-red-600 hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                        title="Nonaktifkan Aset"
+                        onClick={() => handleEditClick(item)}
+                        className="p-2 text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all"
+                        title="Edit Aset"
                       >
-                        <Trash2 size={16} />
+                        <Edit size={16} />
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="p-10 text-center font-bold uppercase text-slate-400 text-xs"
-                >
-                  Belum ada data aset.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      {item.is_active && (
+                        <button
+                          onClick={() => handleDeleteClick(item)}
+                          className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          title="Nonaktifkan"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-16 text-center">
+                    <div className="text-slate-400">
+                      <Box size={40} className="mx-auto mb-3 text-slate-300" />
+                      <p className="text-sm font-medium">Belum ada data aset</p>
+                      <p className="text-xs mt-1">
+                        Klik "Tambah Aset Baru" untuk menambahkan
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* MODAL FORM */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white border-4 border-slate-900 w-full max-w-md shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="bg-slate-900 p-4 flex justify-between items-center border-b-4 border-orange-500">
-              <h2 className="text-white font-black uppercase tracking-widest text-xs">
-                {isEdit ? "Edit Master Aset" : "Tambah Aset Baru"}
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-800">
+                {isEdit ? "Edit Aset" : "Tambah Aset Baru"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-white hover:text-orange-400"
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
               >
-                <X />
+                <X size={18} />
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              {/* Toggle Aktif (Hanya untuk edit) */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {isEdit && (
-                <div className="flex items-center gap-3 p-3 bg-slate-50 border-4 border-slate-200">
+                <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer">
                   <input
                     type="checkbox"
-                    id="is_active"
                     checked={formData.is_active}
                     onChange={(e) =>
                       setFormData({ ...formData, is_active: e.target.checked })
                     }
-                    className="w-5 h-5 accent-orange-500 cursor-pointer"
+                    className="w-4 h-4 accent-orange-500"
                   />
-                  <label
-                    htmlFor="is_active"
-                    className="text-xs font-black uppercase cursor-pointer flex-1"
+                  <span
+                    className={`text-sm font-medium ${formData.is_active ? "text-green-600" : "text-red-500"}`}
                   >
-                    {formData.is_active ? (
-                      <span className="text-green-600">
-                        Aset Tersedia (Bisa Disewa)
-                      </span>
-                    ) : (
-                      <span className="text-red-500">Aset Ditarik / Rusak</span>
-                    )}
-                  </label>
-                </div>
+                    {formData.is_active
+                      ? "Aset Tersedia"
+                      : "Aset Ditarik / Rusak"}
+                  </span>
+                </label>
               )}
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400">
-                  Nama Aset / Barang
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                  Nama Aset *
                 </label>
                 <input
                   required
                   value={formData.nama_aset}
-                  placeholder="Contoh: Gerobak Tipe A"
-                  className="w-full p-3 border-4 border-slate-200 focus:border-orange-500 focus:outline-none font-black text-sm uppercase transition-colors"
                   onChange={(e) =>
                     setFormData({ ...formData, nama_aset: e.target.value })
                   }
+                  placeholder="Contoh: Gerobak Tipe A"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm font-medium transition-all"
                 />
               </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase text-slate-400">
-                  Tarif Sewa Harian (Rp)
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                  Tarif Sewa Harian (Rp) *
                 </label>
-                <div className="flex items-center">
-                  <div className="bg-slate-200 border-y-4 border-l-4 border-slate-200 p-3 font-black text-sm text-slate-500">
+                <div className="flex items-center gap-0">
+                  <span className="px-4 py-2.5 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-sm font-medium text-slate-500">
                     Rp
-                  </div>
+                  </span>
                   <input
                     required
                     type="number"
                     min="0"
                     value={formData.harga_hari}
-                    placeholder="5000"
-                    className="w-full p-3 border-4 border-slate-200 focus:border-orange-500 focus:outline-none font-black text-sm transition-colors"
                     onChange={(e) =>
                       setFormData({ ...formData, harga_hari: e.target.value })
                     }
+                    placeholder="5000"
+                    className="flex-1 px-4 py-2.5 border border-slate-200 rounded-r-xl focus:border-orange-400 focus:ring-4 focus:ring-orange-50 outline-none text-sm font-medium transition-all"
                   />
                 </div>
-                <p className="text-[9px] font-bold text-slate-400 italic pt-1">
-                  *Isi 0 jika barang ini dipinjamkan secara gratis.
+                <p className="text-[11px] text-slate-400 mt-1.5">
+                  *Isi 0 jika dipinjamkan secara gratis.
                 </p>
               </div>
-
-              <div className="pt-4 flex gap-4">
+              <div className="flex gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-4 font-black uppercase text-xs border-4 border-slate-900 hover:bg-slate-50 transition-all active:translate-y-1"
+                  className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-orange-500 text-white font-black uppercase text-xs border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-orange-600 transition-all active:translate-x-1 active:translate-y-1 active:shadow-none"
+                  className="flex-1 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm shadow-orange-500/25"
                 >
                   {isEdit ? "Update Aset" : "Simpan Aset"}
                 </button>
