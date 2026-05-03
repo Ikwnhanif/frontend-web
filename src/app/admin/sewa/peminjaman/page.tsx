@@ -462,11 +462,12 @@ export default function PeminjamanAsetPage() {
             <h1 className="text-2xl font-black uppercase tracking-widest">
               MIE AYAM SPECIALL
             </h1>
-            <p className="text-sm font-bold uppercase tracking-widest mt-1">
+            {/* <p className="text-sm font-bold uppercase tracking-widest mt-1">
               Sistem Distribusi & Kemitraan
-            </p>
+            </p> */}
             <p className="text-xs mt-1">
-              Jl. Contoh Alamat Pusat No. 123, Kota Anda | Telp: 0812-XXXX-XXXX
+              Jl. Parangtritis KM 13 Patalan Jetis Bantul | Telp Whatsapp:
+              62-877-5687-0461 | 62-822-4409-5742
             </p>
           </div>
           <h2 className="text-xl font-black uppercase text-center mb-8 underline underline-offset-4">

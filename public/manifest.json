@@ -1,0 +1,28 @@
+{
+  "name": "MIE SPECIALL POS",
+  "short_name": "MIE SPECIALL",
+  "description": "Sistem Kasir dan Manajemen Mitra Mie Special",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF9F5",
+  "theme_color": "#EA580C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

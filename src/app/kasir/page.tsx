@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/lib/api";
+import Image from "next/image";
 import {
   Delete,
   XCircle,
@@ -15,7 +16,9 @@ import {
   ChevronRight,
   AlertCircle,
   Fingerprint,
-  UtensilsCrossed, // Ikon khusus tema kuliner
+  UtensilsCrossed,
+  History, // Ikon baru untuk riwayat
+  Clock,
 } from "lucide-react";
 
 export default function KasirPage() {
@@ -23,11 +26,16 @@ export default function KasirPage() {
   const [kg, setKg] = useState("");
   const [mitra, setMitra] = useState<any>(null);
 
-  // State untuk pencarian
+  // State Pencarian
   const [allMitra, setAllMitra] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredMitra, setFilteredMitra] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // State Riwayat
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -48,6 +56,24 @@ export default function KasirPage() {
     };
     fetchSemuaMitra();
   }, []);
+
+  // LOAD RIWAYAT
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await api.get("/kasir/riwayat");
+      setHistoryData(res.data || []);
+    } catch (err) {
+      console.error("Gagal load riwayat");
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // Panggil fetchHistory saat modal dibuka
+  useEffect(() => {
+    if (showHistory) fetchHistory();
+  }, [showHistory]);
 
   // Filter Dropdown
   useEffect(() => {
@@ -92,7 +118,7 @@ export default function KasirPage() {
 
   const handleMitraSelected = (selectedMitra: any) => {
     setMitra(selectedMitra);
-    setPin(selectedMitra.pin); // <--- KUNCI PENTING: Set pin dengan PIN asli mitra
+    setPin(selectedMitra.pin || "");
     setSearchQuery("");
     setShowDropdown(false);
     setMessage({
@@ -169,7 +195,7 @@ export default function KasirPage() {
     setSuccessAnim(false);
   };
 
-  // LOGOUT HANDLER (Mencegah Infinite Loop)
+  // LOGOUT HANDLER
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -185,23 +211,31 @@ export default function KasirPage() {
     if (!mitra || !kg || parseFloat(kg) <= 0) return;
     setLoading(true);
     try {
-      // Pastikan kita mengirim PIN dari state `pin` ATAU dari `mitra.pin`
       await api.post("/kasir/check-in", {
         penjual_id: mitra.id,
-        pin: pin || mitra.pin, // <--- Tambahkan parameter pin
+        pin: pin || mitra.pin,
         jumlah_kg: parseFloat(kg),
       });
-
       setSuccessAnim(true);
-      setTimeout(() => handleClear(), 2500);
-    } catch (err: any) {
-      setMessage({
-        type: "error",
-        text: err.response?.data?.error || "Gagal memproses transaksi",
-      });
+      setTimeout(() => {
+        handleClear();
+        // Update riwayat diam-diam di background agar saat dibuka sudah fresh
+        fetchHistory();
+      }, 2500);
+    } catch (err) {
+      setMessage({ type: "error", text: "Gagal memproses transaksi" });
     } finally {
       setLoading(false);
     }
+  };
+
+  // FORMAT JAM UNTUK RIWAYAT
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -217,15 +251,21 @@ export default function KasirPage() {
         }}
       />
 
-      {/* AMBIENT BACKGROUND GLOWS (Warm Food Tone) */}
+      {/* AMBIENT BACKGROUND GLOWS */}
       <div className="ambient-blob bg-orange-400 w-[500px] h-[500px] rounded-full top-[-200px] left-[-200px]" />
       <div className="ambient-blob bg-amber-300 w-[600px] h-[600px] rounded-full bottom-[-200px] right-[-200px]" />
 
       {/* TOP NAVBAR */}
-      <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-orange-100 px-8 flex items-center justify-between z-50 shadow-[0_4px_20px_rgb(234,88,12,0.03)]">
+      <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-orange-100 px-8 flex items-center justify-between z-40 shadow-[0_4px_20px_rgb(234,88,12,0.03)] relative">
         <div className="flex items-center gap-5">
-          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30">
-            <UtensilsCrossed size={24} className="text-white" />
+          <div className="shrink-0 w-12 h-12 relative bg-white rounded-2xl flex items-center justify-center overflow-hidden shadow-md shadow-orange-500/10 border border-orange-50">
+            <Image
+              src="/192x192.png" // Sesuaikan dengan nama file logo Anda di public/
+              alt="Logo Mie Speciall"
+              fill
+              className="object-contain p-1"
+              priority
+            />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-800">
@@ -243,14 +283,24 @@ export default function KasirPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          {/* TOMBOL RIWAYAT */}
+          <button
+            onClick={() => setShowHistory(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white rounded-2xl font-bold text-sm shadow-sm border border-orange-100 transition-all active:scale-95"
+          >
+            <History size={18} /> Riwayat
+          </button>
+
           <button
             onClick={() => window.location.reload()}
-            className="p-3 bg-white hover:bg-orange-50 rounded-full text-slate-400 hover:text-orange-500 shadow-sm border border-slate-100 transition-all active:scale-95"
+            className="p-3 bg-white hover:bg-orange-50 rounded-2xl text-slate-400 hover:text-orange-500 shadow-sm border border-slate-100 transition-all active:scale-95"
           >
             <RotateCcw size={20} />
           </button>
-          <div className="h-8 w-px bg-orange-100" />
+
+          <div className="h-8 w-px bg-orange-100 mx-2" />
+
           <button
             className="flex items-center gap-4 group"
             onClick={handleLogout}
@@ -258,7 +308,7 @@ export default function KasirPage() {
             <div className="text-right">
               <p className="text-sm font-bold text-slate-800">Kasir Aktif</p>
               <p className="text-xs text-slate-400 group-hover:text-orange-600 transition-colors">
-                Tutup Shift (Logout)
+                Tutup Shift
               </p>
             </div>
             <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-orange-500/30 transition-all text-orange-600">
@@ -268,7 +318,7 @@ export default function KasirPage() {
         </div>
       </header>
 
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 p-8 overflow-hidden z-10">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 p-8 overflow-hidden z-10 relative">
         {/* =========================================================
             KOLOM KIRI (7/12) - IDENTIFIKASI & TIMBANGAN 
             ========================================================= */}
@@ -419,7 +469,6 @@ export default function KasirPage() {
                 </div>
               </div>
             )}
-            {/* Watermark Aesthetic (Hanya muncul saat active) */}
             {mitra && (
               <CreditCard
                 size={240}
@@ -512,7 +561,6 @@ export default function KasirPage() {
                 : "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-[0_12px_30px_-10px_rgba(245,158,11,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(245,158,11,0.6)] hover:-translate-y-1 active:scale-[0.98]"
             }`}
           >
-            {/* Shimmer effect for active button */}
             {mitra && kg && !loading && !successAnim && (
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
             )}
@@ -537,7 +585,7 @@ export default function KasirPage() {
           {/* STATUS NOTIFICATION */}
           {message.text && (
             <div
-              className={`p-5 rounded-[24px] flex items-center gap-4 animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 shadow-lg ${
+              className={`p-5 rounded-[24px] flex items-center gap-4 animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 shadow-lg absolute bottom-10 right-10 z-50 ${
                 message.type === "error"
                   ? "bg-red-500 text-white shadow-red-500/20"
                   : "bg-emerald-500 text-white shadow-emerald-500/20"
@@ -555,6 +603,96 @@ export default function KasirPage() {
           )}
         </div>
       </main>
+
+      {/* =========================================================
+          MODAL RIWAYAT TRANSAKSI HARI INI
+          ========================================================= */}
+      {showHistory && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200">
+          {/* Overlay Gelap */}
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setShowHistory(false)}
+          />
+
+          {/* Modal Box */}
+          <div className="relative w-full max-w-3xl bg-white rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col max-h-[85vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/50 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
+                  <History size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-800 tracking-tight">
+                    Riwayat Transaksi
+                  </h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    HARI INI SAJA
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="p-3 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-2xl transition-all"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body (Scrollable List) */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              {loadingHistory ? (
+                <div className="flex flex-col items-center justify-center h-40 gap-3 text-slate-400">
+                  <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+                  <p className="text-sm font-bold">Memuat data...</p>
+                </div>
+              ) : historyData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400">
+                  <AlertCircle size={40} className="text-slate-300" />
+                  <p className="text-sm font-bold">
+                    Belum ada transaksi hari ini
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {historyData.map((item, index) => (
+                    <div
+                      key={item.id || index}
+                      className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all"
+                    >
+                      <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                        <UtensilsCrossed size={20} className="text-slate-400" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-bold text-slate-800 truncate">
+                          {item.Penjual?.nama_penjual || "Mitra Tidak Dikenal"}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                            <Clock size={10} />{" "}
+                            {formatTime(item.tanggal_transaksi)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 bg-orange-50 px-4 py-2 rounded-xl border border-orange-100">
+                        <span className="text-2xl font-black text-orange-600 leading-none block">
+                          {item.jumlah_kg}
+                        </span>
+                        <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
+                          KILOGRAM
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

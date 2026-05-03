@@ -230,14 +230,13 @@ export default function InvoicePage() {
                       Mie Ayam Speciall
                     </h1>
                     <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-gray-600 mt-1">
-                      PT. Outsys Distribusi Indonesia
+                      -
                     </p>
                   </div>
                 </div>
                 <div className="text-[9px] text-gray-600 mt-3 leading-relaxed">
-                  <p>Jl. Raya Distribusi No. 123, Kota Bisnis</p>
-                  <p>Telp: 0813-9375-1133 | Email: admin@outsys.space</p>
-                  <p>NPWP: 12.345.678.9-012.000</p>
+                  <p>Jl. Parangtritis KM 13 Patalan Jetis Bantul</p>
+                  <p>Telp: 62-877-5687-0461 | 62-822-4409-5742 </p>
                 </div>
               </div>
 
@@ -314,10 +313,10 @@ export default function InvoicePage() {
               </p>
               <div className="text-xs space-y-1.5 text-gray-700">
                 <p className="font-bold">Transfer Bank / Tunai</p>
-                <p>BCA: 1234567890 a.n. PT Outsys</p>
-                <p>Mandiri: 0987654321 a.n. PT Outsys</p>
+                <p>BCA: 1963149541 a.n. Anendra Restu </p>
+                <p>Mandiri: 1370023767128 a.n. Anendra Restu </p>
                 <p className="text-[10px] text-gray-500 mt-2">
-                  Konfirmasi: 0813-9375-1133
+                  Konfirmasi: 62-877-5687-0461
                 </p>
               </div>
             </div>

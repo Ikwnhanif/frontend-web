@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import api from "@/lib/api";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Lock,
@@ -138,8 +139,14 @@ export default function LoginPage() {
             {/* Logo */}
             <div className="mb-8 inline-flex">
               <div className="relative">
-                <div className="w-28 h-28 bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-orange-500/30 transform hover:rotate-3 transition-transform duration-300">
-                  <Coffee size={44} className="text-white" />
+                <div className="relative w-28 h-28 bg-white rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl shadow-orange-500/30 transform hover:rotate-3 transition-transform duration-300 border-[3px] border-white/20">
+                  <Image
+                    src="/512x512.png" // Menggunakan resolusi besar agar tajam di desktop
+                    alt="Logo Mie Speciall"
+                    fill
+                    className="object-contain p-2"
+                    priority
+                  />
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-400 rounded-full border-4 border-slate-900 flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full" />
@@ -194,8 +201,14 @@ export default function LoginPage() {
         <div className="w-full max-w-[440px]">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl shadow-xl shadow-orange-500/20 mb-4">
-              <Coffee size={32} className="text-white" />
+            <div className="relative inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl overflow-hidden shadow-xl shadow-orange-500/20 mb-4 border border-orange-100">
+              <Image
+                src="/192x192.png"
+                alt="Logo Mie Speciall"
+                fill
+                className="object-contain p-1.5"
+                priority
+              />
             </div>
             <h1 className="text-2xl font-black text-slate-800">
               Mie Ayam <span className="text-orange-500">Speciall</span>

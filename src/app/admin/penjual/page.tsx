@@ -412,7 +412,8 @@ export default function MasterPenjualPage() {
               Sistem Operasional Distribusi & Kemitraan
             </p>
             <p className="text-xs mt-1">
-              Jl. Contoh Alamat Pusat No. 123 | Telp: 0813-9375-1133
+              Jl. Parangtritis KM 13 Patalan Jetis Bantul | Telp Whatsapp:
+              62-877-5687-0461 | 62-822-4409-5742
             </p>
           </div>
 
